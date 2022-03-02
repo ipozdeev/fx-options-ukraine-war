@@ -10,7 +10,10 @@ DATAPATH = os.path.join(os.environ.get("PROJECT_ROOT"), "data/")
 def get_spot_data() -> pd.DataFrame:
     """Get USDRUB spot rates."""
     fname = os.path.join(DATAPATH, "spot.ftr")
-    return pd.read_feather(fname)
+    res = pd.read_feather(fname)\
+        .set_index("date").resample("1T").asfreq()\
+        .reset_index()
+    return res
 
 
 def get_ois_data() -> pd.DataFrame:
@@ -33,3 +36,11 @@ def get_option_data() -> pd.DataFrame:
     """
     fname = os.path.join(DATAPATH, "option.ftr")
     return pd.read_feather(fname)
+
+
+def get_timeline() -> pd.Series:
+    """
+    """
+    fname = os.path.join(DATAPATH, "timeline.csv")
+    res = pd.read_csv(fname, index_col=0, parse_dates=True)
+    return res
