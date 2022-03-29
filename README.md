@@ -15,6 +15,8 @@ jump to [walkthrough](./walkthrough.ipynb) for results
     python3 -m venv pyenv; source pyenv/bin/activate; pip install -r requirements.txt
     ```
 
-* package [optools](https://github.com/ipozdeev/optools) must be downloaded where python can find it;
-
+* additionally, package [optools](https://github.com/ipozdeev/optools) must be downloaded where python can find it;
 * environment variable `PROJECT_ROOT` must be set to the local repository;
+* feather file `usdrub-data-raw.ftr` must exist in `data/` (details in `src/datafeed_/downstream.py`) 
+
+have fun!
