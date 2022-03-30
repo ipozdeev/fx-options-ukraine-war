@@ -1,12 +1,15 @@
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import lines as mlines
 from matplotlib import dates as mdates
+from matplotlib.ticker import FormatStrFormatter
 
 from .setup import *
 from .datafeed_.downstream import get_timeline
 
+mpl.style.use("seaborn")
 palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
@@ -21,12 +24,12 @@ def plot_spot(spot: pd.Series) -> plt.Figure:
     fig, ax = plt.subplots(1, 2, sharey=True, figsize=(8, 4))
 
     # labels
-    ax[0].set_title("feb 15th - 28th")
+    # ax[0].set_title("")
     ax[0].set_ylabel("usdrub")
     ax[1].set_title("feb 24th")
 
     # lines
-    to_plot.loc["2022-02-15":].plot(ax=ax[0])
+    to_plot.loc["2022-01-01":"2022-02-25"].plot(ax=ax[0])
     to_plot.loc["2022-02-23 18:00":"2022-02-24"].plot(ax=ax[1])
     for ax_ in ax:
         ax_.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
@@ -58,14 +61,15 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     ax_r = ax_l.twinx()
 
     # lines
-    to_plot["rf"].plot(ax=ax_l, color=palette[0])
-    to_plot["div_yield"].plot(ax=ax_r, color=palette[2])
+    to_plot["r_counter"].plot(ax=ax_l, color=palette[0])
+    to_plot["r_base"].plot(ax=ax_r, color=palette[2])
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0], label="rub(rf), left axis"),
+        mlines.Line2D([], [], color=palette[0],
+                      label="rub(counter), left axis"),
         mlines.Line2D([], [], color=palette[2],
-                      label="usd(div_yield), right axis")
+                      label="usd(base), right axis")
     ]
     ax_l.legend(handles=leg_handles, loc="upper left")
 
@@ -81,27 +85,86 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def plot_invasion_probability(prob: pd.Series, show_invasion: bool = False) \
-        -> plt.Figure:
+def plot_invasion_probability(prob, plot_warnings=False) -> plt.Figure:
+    """Plot prob of invasion from 01/01/2022 up to 02/24."""
+
+    # canvas
+    fig, ax0 = plt.subplots(figsize=(8, 4))
+    ax = (ax0, ax0.twinx())
+
+    # lines
+    leg_handles = list()
+    for n_, level_ in enumerate(prob.columns):
+        prob[level_].plot(ax=ax[n_], linestyle="none", marker=".",
+                          color=palette[n_])
+        lr = {0: "left", 1: "right"}.get(n_)
+        leg_handles.append(
+            mlines.Line2D([], [], color=palette[n_],
+                          label=f"$P[S>{level_}]$ ({lr} axis)")
+        )
+        ax[n_].set_ylim(-max(prob[level_])/10, max(prob[level_]) * 10/9)
+        ax[n_].set_yticks(np.linspace(0, max(prob[level_]), 5))
+        ax[n_].tick_params(axis='y', colors=palette[n_])
+        ax[n_].yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+
+    leg_handles += [
+        mlines.Line2D([], [], color=palette[2], label="announcement"),
+    ]
+
+    timeline = get_timeline()
+    ax0.axvline(x=timeline.index[0], color=palette[2], label="announcement",
+                alpha=0.5)
+
+    if plot_warnings:
+        for dt_ in timeline.index[1:]:
+            ax0.axvline(x=dt_, color=palette[4], alpha=0.75)
+        leg_handles += [
+            mlines.Line2D([], [], color=palette[4], label="warning"),
+        ]
+
+    # labels
+    ax0.set_ylabel(r"$P[S > s]$")
+    ax0.set_xlabel("", visible=False)
+
+    # legend
+    ax0.legend(handles=leg_handles)
+
+    # ticks
+    ax0.set_xticklabels(ax0.get_xticklabels(), rotation=0, ha="center")
+    ax0.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+    ax0.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+
+    if plot_warnings:
+        ax0.xaxis.set_minor_locator(mdates.DayLocator(interval=1))
+        ax0.xaxis.set_minor_formatter(mdates.DateFormatter("%d"))
+        ax0.grid(which="minor")
+
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_mfiv(v, show_invasion=False) -> plt.Figure:
     """Plot prob of invasion from 01/01/2022 up to 02/24."""
 
     # canvas
     fig, ax = plt.subplots(figsize=(8, 4))
 
     # lines
-    prob.plot(ax=ax, linestyle="none", marker=".")
+    v.plot(ax=ax, linestyle="none", marker=".", color=palette[0])
 
     if show_invasion:
         dt_t = get_timeline().index[0]
         ax.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
 
     # labels
-    ax.set_ylabel(r"$P[S > s]$")
+    ax.set_ylabel(r"$\sqrt{mfiv}$")
     ax.set_xlabel("", visible=False)
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0], label=r"$P[S>s]$"),
+        mlines.Line2D([], [], color=palette[0],
+                      label="mfi vola")
     ]
     if show_invasion:
         leg_handles += [

@@ -83,7 +83,7 @@ def get_rates_data() -> pd.DataFrame:
 
     """
     res = get_raw_data() \
-        .query("name == ('rf', 'div_yield')") \
+        .query("name == ('r_counter', 'r_base')") \
         .pivot("date", "name", "value")\
         .reset_index()
     return res
