@@ -16,9 +16,6 @@ RUN chown jovyan lib
 # change back to user jovyan
 USER jovyan
 
-RUN echo ${PYTHONPATH}
-RUN echo $PYTHONPATH
-
 # install packages
 # fro mrequirements
 COPY requirements.txt .

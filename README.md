@@ -19,7 +19,7 @@ jump to [the walkthrough notebook](./walkthrough.ipynb) for results
 In the immediate run-up to the invasion (a week or so):
 1. the FX market participants expected RUB to fall to the level of 85 RUB per 1 USD in case of an invasion;
 1. USDRUB dynamics was strongly determined by expectations of an invasion and by little else;
-1. the risk-neutral probability coincids with the physical probability (risk premium is zero);
+1. the risk-neutral probability coincides with the physical probability (risk premium is zero);
 1. the risk-neutral distribution did not have tails that could not be approximated by those of a spherical distribution;
 1. markets were sufficiently liquid, and Bloomberg quotes are representative.
 
@@ -50,19 +50,42 @@ To estimate the probability of the spot rate exceeding a certain threshold, I in
 
 The well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) equates the risk-neutral density of the underlying $q(S)$ to the second derivative of the option pricing function $C(\cdot)$ w.r.t. the strike price $K$:
 $$q(S) = e^{r_f \tau} \frac{\partial^2 C(S,K,\ldots)}{\partial K^2}.$$
-With a pricing function at hand, numerical calculation of the density is straighforward. Here, I take $C$ to be the Black-Scholes pricing function at the level of SABR-derived implied volatilities along the strike dimension:
+With a pricing function at hand, numerical calculation of the density is straightforward. Here, I take $C$ to be the Black-Scholes pricing function at the level of SABR-derived implied volatilities along the strike dimension:
 $$C(S, K), \ldots = C^{bs}(S, \hat{\sigma}(K), K, \ldots),$$
 where $\hat{\sigma}(K)$ is the SABR volatility smile calibrated to the FX option contracts (details in the [data section](#data)).
 
 ## requirements
-* required packages are in `requirements.txt`:
+### data
 
-    ```bash
-    python3 -m venv pyenv; source pyenv/bin/activate; pip install -r requirements.txt
-    ```
+i provide the events with timestamps in `data/timeline.csv`, but it is your responsibility to fetch the price data and put it into 
+a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in `src/datafeed_/downstream.py`. 
 
-* additionally, package [optools](https://github.com/ipozdeev/optools) must be downloaded where python can find it;
-* environment variable `PROJECT_ROOT` must be set to the local repository;
-* feather file `usdrub-data-raw.ftr` must exist in `data/` (details in `src/datafeed_/downstream.py`) 
+### environment
+clone the repo somewhere and `cd` into the directory;
+
+#### docker
+
+if using [docker](https://www.docker.com/), all environment variables and dependencies are taken care of;
+* build the image:
+  ```bash
+  docker build --tag pydocker .
+  ```
+* run the container to get access jupyter and be able to run `walkthrough.ipynb`:
+  ```bash
+  docker run -it -p 8888:8888 pydocker
+  ```
+* follow the link as usual.
+
+#### no docker
+if no docker, you will have to create the environment yourself; 
+* create virtual environment with the required packages from `requirements.txt`: 
+  ```bash
+  python3 -m venv pyenv; source pyenv/bin/activate; pip install -r requirements.txt
+  ```
+
+* don't forget to register the kernel; 
+* clone package [optools](https://github.com/ipozdeev/optools) to where python can find it; 
+* set environment variable `PROJECT_ROOT` to point the local repository (maybe using an `.env` file);
+* `jupyter lab` etc.
 
 have fun!
