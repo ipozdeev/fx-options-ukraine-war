@@ -2,35 +2,17 @@
 
 (with Akos Török)
 
-On February 24th 04:06 UTC+1, the "special military operation" was announced 
-by the Russian president and the Russian army invaded Ukraine. In the run-up 
-to the event, there had been warnings by US officials about the possibility 
-of this outcome. Was the invasion expected by the FX market &ndash; a known 
-barometer of a country's economic well-being? Did the warnings reinforce the 
-expectation?
-
-To answer these questions, we assume that option traders were thinking about a 
-potential invasion and predicted USDRUB to stabilize at a certain level one 
-month after it happens, we estimate the probability of such an invasion for 
-two potential levels as follows:
+Did the FX options market expect the invasion announced on 02/24 04:06 UTC+1? 
+Assuming that option traders were thinking about a potential invasion and predicted 
+USDRUB to stabilize at a certain level one month after it happens, 
+we estimate the probability of such an invasion for two potential levels as follows:
 
 ![probability of invasion](./output/figures/prob.png "probability of invasion")
 
-The following figure zooms in on the periods with warnings by the US 
-officials, as described in file [timeline.csv](./data/timeline.csv):
-
-![probability of invasion](./output/figures/prob-warnings.png "probability of invasion with warnings")
-Unfortunately, two of the warnings fall precisely before a period of data 
-unavailability. Of the two remaining ones, the very first is associated with a 
-slight rise in the probability of invasion after it, and the other &mdash; 
-with no change at all. Hence, no conclusive evidence is present.
-
-A brief summary is below; for a detailed code walkthrough, formulas and other 
-results do check out [the walkthrough notebook](./walkthrough.ipynb).
+jump to [the walkthrough notebook](./walkthrough.ipynb) for results
 
 * [assumptions](#assumptions)
 * [methodology](#methodology)
-* [code](#code)
 * [requirements](#requirements)
 
 ## assumptions
@@ -63,18 +45,14 @@ supply to their customers, and those were way different than the once observed
 on Bloomberg on the same day. Also, we are using mid quotes here, and the 
 bid-ask spreads are large.
 
-
 ## methodology
 To estimate the probability of the spot rate exceeding a certain threshold, I integrate the risk-neutral density of the spot rate extracted non-parametrically over a suitable domain.
 
-The well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) equates the risk-neutral density of the underlying to the second derivative of the option pricing function w.r.t. the strike price.
-Here, I take the option pricing function to be the Black-Scholes formula at the level of a SABR implied volatility as a function of a strike price. The SABR volatility smile is calibrated to the FX option contracts as described in 
-["Foreign Exchange Option Pricing: A Practitioner's Guide"](https://books.google.ch/books?id=7vua-0-2sgMC&redir_esc=y) by Iain Clark.
-
-
-## code
-The code is written in python and located in directory `src/`. A detailed walkthrough is in form of a [jupyter notebook](./walkthrough.ipynb).
-
+The well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) equates the risk-neutral density of the underlying $q(S)$ to the second derivative of the option pricing function $C(\cdot)$ w.r.t. the strike price $K$:
+$$q(S) = e^{r_f \tau} \frac{\partial^2 C(S,K,\ldots)}{\partial K^2}.$$
+With a pricing function at hand, numerical calculation of the density is straighforward. Here, I take $C$ to be the Black-Scholes pricing function at the level of SABR-derived implied volatilities along the strike dimension:
+$$C(S, K), \ldots = C^{bs}(S, \hat{\sigma}(K), K, \ldots),$$
+where $\hat{\sigma}(K)$ is the SABR volatility smile calibrated to the FX option contracts (details in the [data section](#data)).
 
 ## requirements
 * required packages are in `requirements.txt`:
