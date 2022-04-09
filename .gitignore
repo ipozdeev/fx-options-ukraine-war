@@ -131,6 +131,16 @@ dmypy.json
 
 # PyCharm
 .idea/
+.run/
 
 # misc
 playground.py
+
+# Sublime files
+*.sublime-project
+*.sublime-workspace
+
+# data
+data/*
+!data/timeline.csv
+joblib/

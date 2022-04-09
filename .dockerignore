@@ -1,0 +1,13 @@
+# PyCharm
+.idea/
+.run/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# env
+pyenv/
+.env
+
+# data cache
+*/joblib/
