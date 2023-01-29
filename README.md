@@ -1,4 +1,4 @@
-# fx-options-ukraine-war
+# fx option markets ahead of the russian invasion into ukraine
 
 (with Akos Török)
 
