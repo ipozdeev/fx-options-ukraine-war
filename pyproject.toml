@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "fx-options-ukraine-war"
+version = "0.1.0"
+description = ""
+authors = ["ipozdeev <igor.posdeev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.0"
+numpy = "^1.26.2"
+matplotlib = "^3.8.2"
+python-dotenv = "^1.0.0"
+tqdm = "^4.66.1"
+scipy = "^1.11.4"
+joblib = "^1.3.2"
+optools = {git = "https://github.com/ipozdeev/optools"}
+jupyter = "^1.0.0"
+pyarrow = "^14.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
