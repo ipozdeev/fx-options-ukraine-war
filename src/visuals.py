@@ -6,10 +6,9 @@ from matplotlib import lines as mlines
 from matplotlib import dates as mdates
 from matplotlib.ticker import FormatStrFormatter
 
-from .setup import *
-from .datafeed_.downstream import get_timeline
+from .datafeed.downstream import get_timeline
 
-mpl.style.use("seaborn")
+mpl.style.use("seaborn-v0_8-colorblind")
 palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
@@ -40,6 +39,9 @@ def plot_spot(spot: pd.Series) -> plt.Figure:
         mlines.Line2D([], [], color=palette[2], label="announcement")
     ]
     ax[1].legend(handles=leg_handles)
+
+    ax[0].grid(axis="y")
+    ax[1].grid(axis="y")
 
     fig.tight_layout()
 
@@ -137,7 +139,6 @@ def plot_invasion_probability(prob, plot_warnings=False) -> plt.Figure:
     if plot_warnings:
         ax0.xaxis.set_minor_locator(mdates.DayLocator(interval=1))
         ax0.xaxis.set_minor_formatter(mdates.DateFormatter("%d"))
-        ax0.grid(which="minor")
 
     fig.tight_layout()
 
