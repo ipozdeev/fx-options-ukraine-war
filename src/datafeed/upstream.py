@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from strike import strike_from_delta, strike_from_atm
+from optools.strike import strike_from_delta, strike_from_atm
 
 from .downstream import *
 

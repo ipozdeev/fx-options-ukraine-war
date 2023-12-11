@@ -9,8 +9,9 @@ from itertools import product
 
 from optools.smile import SABR
 
-memory = Memory(location=os.path.join(os.environ.get("PROJECT_ROOT"), "data"),
-                verbose=False)
+DATAPATH = "data/"
+
+memory = Memory(location=DATAPATH, verbose=False)
 
 
 @memory.cache

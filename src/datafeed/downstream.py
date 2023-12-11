@@ -1,9 +1,7 @@
 import os
 import pandas as pd
 
-from src.setup import *
-
-DATAPATH = os.path.join(os.environ.get("PROJECT_ROOT"), "data/")
+DATAPATH = "data/"
 
 
 def get_raw_data() -> pd.DataFrame:
@@ -70,7 +68,7 @@ def get_spot_data() -> pd.DataFrame:
     """Get USDRUB spot rates."""
     res = get_raw_data()\
         .query("name == 'spot'") \
-        .pivot("date", "name", "value") \
+        .pivot(index="date", columns="name", values="value") \
         .reset_index()
 
     return res
@@ -84,7 +82,7 @@ def get_rates_data() -> pd.DataFrame:
     """
     res = get_raw_data() \
         .query("name == ('r_counter', 'r_base')") \
-        .pivot("date", "name", "value")\
+        .pivot(index="date", columns="name", values="value")\
         .reset_index()
     return res
 
@@ -93,7 +91,7 @@ def get_forward_data() -> pd.DataFrame:
     """Get 1-month and 1-week USDRUB forward rates."""
     res = get_raw_data() \
         .query("name == 'forward'") \
-        .pivot("date", "name", "value") \
+        .pivot(index="date", columns="name", values="value") \
         .reset_index()
 
     return res
