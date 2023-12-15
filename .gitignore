@@ -133,6 +133,9 @@ dmypy.json
 .idea/
 .run/
 
+# VS Code
+.vscode/
+
 # misc
 playground.py
 
