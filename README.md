@@ -58,34 +58,43 @@ where $\hat{\sigma}(K)$ is the SABR volatility smile calibrated to the FX option
 ### data
 
 i provide the events with timestamps in `data/timeline.csv`, but it is your responsibility to fetch the price data and put it into 
-a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in `src/datafeed_/downstream.py`. 
+a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in `src/datafeed/downstream.py`. 
 
 ### environment
 clone the repo somewhere and `cd` into the directory;
+
+```bash
+git clone https://github.com/ipozdeev/fx-options-ukraine-war
+cd fx-options-ukraine-war
+```
 
 #### docker
 
 if using [docker](https://www.docker.com/), all environment variables and dependencies are taken care of;
 * build the image:
   ```bash
-  docker build --tag pydocker .
+  docker build --tag fouw .
   ```
 * run the container to get access jupyter and be able to run `walkthrough.ipynb`:
   ```bash
-  docker run -it -p 8888:8888 pydocker
+  docker run -p 8888:8888 -v $(pwd):/home/jovyan/work -e JUPYTER_TOKEN='' fouw
   ```
 * follow the link as usual.
 
 #### no docker
-if no docker, you will have to create the environment yourself; 
-* create virtual environment with the required packages from `requirements.txt`: 
-  ```bash
-  python3 -m venv pyenv; source pyenv/bin/activate; pip install -r requirements.txt
-  ```
+if no docker, you will have to create the environment yourself either with poetry:
+```bash
+poetry shell
+```
 
-* don't forget to register the kernel; 
-* clone package [optools](https://github.com/ipozdeev/optools) to where python can find it; 
-* set environment variable `PROJECT_ROOT` to point the local repository (maybe using an `.env` file);
-* `jupyter lab` etc.
+(make sure `which python` points to the poetry environment) or with `venv` from `requirements.txt`: 
 
-have fun!
+```bash
+python3 -m venv .venv
+source .venv/bin/activate; 
+pip install -r requirements.txt
+```
+
+Then, `jupyter lab` will take you to the correct place.
+
+Have fun!
