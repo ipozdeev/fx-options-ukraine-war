@@ -14,7 +14,7 @@ def put_raw_data() -> None:
     """
     # excel
     # read in
-    fname = os.path.join(DATAPATH, "RUB1M_BB_ticks.xlsx")
+    fname = os.path.join(PROCESSED_DATA_PATH, "RUB1M_BB_ticks.xlsx")
     data = pd.read_excel(fname, header=None)
 
     # loop over pairs of columns
@@ -38,7 +38,7 @@ def put_raw_data() -> None:
     # save
     res.reset_index().melt(id_vars="date", var_name="name")\
         .dropna().reset_index(drop=True)\
-        .to_feather(os.path.join(DATAPATH, "usdrub-data-raw.ftr"))
+        .to_feather(os.path.join(PROCESSED_DATA_PATH, "usdrub-data-raw.ftr"))
 
     # # csv
     # fname = os.path.join(DATAPATH, "usdrub-data.csv")
@@ -76,7 +76,7 @@ def put_raw_data() -> None:
 
 
 def put_strikes_data() -> None:
-    d_full = get_raw_data()
+    d_full = get_processed_data()
     d_full = d_full.pivot(index="date", columns="name", values="value")
     v_10 = vanillas_from_combinations(r=d_full["v_10r"], b=d_full["v_10b"],
                                       atm_vol=d_full["v_atm"], delta=0.1)
@@ -117,4 +117,4 @@ def put_strikes_data() -> None:
     pd.concat((k, k_atm))\
         .dropna() \
         .reset_index(drop=True) \
-        .to_feather(os.path.join(DATAPATH, "strike-vola.ftr"))
+        .to_feather(os.path.join(PROCESSED_DATA_PATH, "strike-vola.ftr"))
