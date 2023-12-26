@@ -137,13 +137,16 @@ dmypy.json
 .vscode/
 
 # misc
-playground.py
+playground.*
 
 # Sublime files
 *.sublime-project
 *.sublime-workspace
 
 # data
-data/*
-!data/timeline.csv
+data/**/*.ftr
+!data/raw/timeline.csv
 joblib/
+*.xlsx
+!*.example.xlsx
+
