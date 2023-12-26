@@ -6,7 +6,7 @@ from matplotlib import lines as mlines
 from matplotlib import dates as mdates
 from matplotlib.ticker import FormatStrFormatter
 
-from .datafeed.downstream import get_timeline
+from .datafeed import get_timeline
 
 mpl.style.use("seaborn-v0_8-colorblind")
 palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -17,7 +17,7 @@ def plot_spot(spot: pd.Series) -> plt.Figure:
     to_plot = spot \
         .resample("1T").asfreq() \
         .rename("usdrub")
-    dt_t = get_timeline().index[0]
+    dt_t = get_timeline().index[-1]
 
     # canvas
     fig, ax = plt.subplots(1, 2, sharey=True, figsize=(8, 4))
@@ -155,7 +155,7 @@ def plot_mfiv(v, show_invasion=False) -> plt.Figure:
     v.plot(ax=ax, linestyle="none", marker=".", color=palette[0])
 
     if show_invasion:
-        dt_t = get_timeline().index[0]
+        dt_t = get_timeline().index[-1]
         ax.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
 
     # labels
@@ -185,7 +185,7 @@ def plot_mfiv(v, show_invasion=False) -> plt.Figure:
 
 def plot_invasion_probability_zoomed(prob: pd.Series) -> plt.Figure:
     """Zoom in on Fe 23-24th."""
-    dt_t = get_timeline().index[0]
+    dt_t = get_timeline().index[-1]
 
     # canvas
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -219,3 +219,21 @@ def plot_invasion_probability_zoomed(prob: pd.Series) -> plt.Figure:
     fig.tight_layout()
 
     return fig
+
+
+# formatting frames for notebooks
+def format_dataframe(df: pd.DataFrame, tail=True):
+    """A little formatter helper."""
+    if tail:
+        return format_dataframe(df.tail(), tail=False)
+    
+    if df.index.inferred_type == 'datetime64':
+        return format_dataframe(df.rename_axis(index="date").reset_index(),
+                                tail=tail)
+    
+    res = df.style\
+        .format(formatter={"date": lambda x: x.strftime("%Y-%m-%d %H:%M")},
+                precision=2)\
+        .hide(axis=0)
+    
+    return res
