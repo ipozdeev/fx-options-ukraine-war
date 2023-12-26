@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM jupyter/minimal-notebook
+FROM jupyter/minimal-notebook:python-3.10
 
 # install packages
 # from requirements
