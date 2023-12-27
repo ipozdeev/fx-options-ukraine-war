@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import re
 import matplotlib as mpl
 from matplotlib import pyplot as plt
 from matplotlib import lines as mlines
@@ -54,7 +55,7 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     Parameters
     ----------
     rates : pd.DataFrame
-        indexed by datetime, with columns 'rf' and 'div_yield'
+        indexed by datetime, with columns 'r_conuter' and 'r_base'
     """
     to_plot = rates.resample("1T").asfreq()
 
@@ -75,14 +76,17 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     ]
     ax_l.legend(handles=leg_handles, loc="upper left")
 
-    # grid
+    # grid off bc of two axes
     ax_l.grid(False)
     ax_r.grid(False)
 
+    # title
+    ax_l.set_title("interest rates ahead of announcement")
+
     # labels
     ax_l.set_xlabel("", visible=False)
-    ax_l.set_ylabel("rub")
-    ax_r.set_ylabel("usd")
+    ax_l.set_ylabel("rub, % p.a.")
+    ax_r.set_ylabel("usd, % p.a.")
 
     return fig
 
@@ -222,18 +226,21 @@ def plot_invasion_probability_zoomed(prob: pd.Series) -> plt.Figure:
 
 
 # formatting frames for notebooks
-def format_dataframe(df: pd.DataFrame, tail=True):
+def format_dataframe(df: pd.DataFrame, precision=2):
     """A little formatter helper."""
-    if tail:
-        return format_dataframe(df.tail(), tail=False)
-    
+    # if index is present, just turn it into a column
     if df.index.inferred_type == 'datetime64':
-        return format_dataframe(df.rename_axis(index="date").reset_index(),
-                                tail=tail)
+        return format_dataframe(
+            df.rename_axis(index="date").reset_index(),
+            precision=precision
+        )
+    
+    # recognize column with dates
+    datecol = next((s for s in df.columns if re.search("[Dd]ates?", s)), "date")
     
     res = df.style\
-        .format(formatter={"date": lambda x: x.strftime("%Y-%m-%d %H:%M")},
-                precision=2)\
+        .format(formatter={datecol: lambda x: x.strftime("%Y-%m-%d %H:%M")},
+                precision=precision)\
         .hide(axis=0)
     
     return res
