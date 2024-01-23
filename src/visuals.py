@@ -3,9 +3,10 @@ import pandas as pd
 import re
 import matplotlib as mpl
 from matplotlib import pyplot as plt
-from matplotlib import lines as mlines
-from matplotlib import dates as mdates
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.lines import Line2D
+from matplotlib.dates import DayLocator, DateFormatter, \
+    WeekdayLocator, MO, MonthLocator, HourLocator
+from matplotlib.ticker import FormatStrFormatter, MultipleLocator
 
 from .datafeed import get_timeline
 
@@ -15,34 +16,45 @@ palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 def plot_spot(spot: pd.Series) -> plt.Figure:
     """Plot spot exchange rate."""
-    to_plot = spot \
-        .resample("1T").asfreq() \
-        .rename("usdrub")
+    to_plot = spot.rename("usdrub")
     dt_t = get_timeline().index[-1]
 
     # canvas
-    fig, ax = plt.subplots(1, 2, sharey=True, figsize=(8, 4))
+    fig, ax = plt.subplots(1, 2, sharey=True, sharex=False, figsize=(8, 4))
 
     # labels
     # ax[0].set_title("")
     ax[0].set_ylabel("usdrub")
-    ax[1].set_title("feb 24th")
 
     # lines
-    to_plot.loc["2022-01-01":"2022-02-25"].plot(ax=ax[0])
+    to_plot.loc["2022-02":"2022-04"].plot(ax=ax[0])
     to_plot.loc["2022-02-23 18:00":"2022-02-24"].plot(ax=ax[1])
-    for ax_ in ax:
-        ax_.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
+    
+    # attr common to both axes
+    for _ax in ax:
+        _ax.axvline(x=dt_t, color="k", label="announcement")
+        _ax.set_xlabel("", visible=None)
+        _ax.grid(which="both", axis="both")
+
+    # xticks
+    ax[0].xaxis.set_major_locator(MonthLocator(bymonthday=24))
+    ax[0].xaxis.set_minor_locator(WeekdayLocator(byweekday=MO))
+    ax[0].xaxis.set_major_formatter(DateFormatter("%b-%d"))
+    ax[0].xaxis.set_minor_formatter(DateFormatter("%d"))
+    ax[1].xaxis.set_major_locator(MonthLocator(bymonth=2, bymonthday=24))
+    ax[1].xaxis.set_major_formatter(DateFormatter("%b-%d"))
+    ax[1].xaxis.set_minor_locator(HourLocator(interval=6))
+    ax[1].xaxis.set_minor_formatter(DateFormatter("%H:%M"))
+    
+    fig.autofmt_xdate(rotation=0, ha="center")
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0], label="spot rate"),
-        mlines.Line2D([], [], color=palette[2], label="announcement")
+        Line2D([], [], color=palette[0], label="spot rate"),
+        Line2D([], [], color="k", label="announcement")
     ]
     ax[1].legend(handles=leg_handles)
-
-    ax[0].grid(axis="y")
-    ax[1].grid(axis="y")
+    plt.suptitle("spot usdrub around invasion", y=0.95)
 
     fig.tight_layout()
 
@@ -55,7 +67,7 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     Parameters
     ----------
     rates : pd.DataFrame
-        indexed by datetime, with columns 'r_conuter' and 'r_base'
+        indexed by datetime, with columns 'r_counter' and 'r_base'
     """
     to_plot = rates.resample("1T").asfreq()
 
@@ -64,20 +76,31 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     ax_r = ax_l.twinx()
 
     # lines
-    to_plot["r_counter"].plot(ax=ax_l, color=palette[0])
-    to_plot["r_base"].plot(ax=ax_r, color=palette[2])
+    to_plot["r_counter"].plot(ax=ax_l, color=palette[2])
+    to_plot["r_base"].plot(ax=ax_r, color=palette[0])
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0],
+        Line2D([], [], color=palette[2],
                       label="rub(counter), left axis"),
-        mlines.Line2D([], [], color=palette[2],
-                      label="usd(base), right axis")
+        Line2D([], [], color=palette[0],
+                      label="usd(base), right axis"),
+        Line2D([], [], color="k", label="announcement")
     ]
     ax_l.legend(handles=leg_handles, loc="upper left")
 
+    # ticks, trying to align the two axes
+    ax_l.set_ylim((6, 34))
+    ax_l.set_yticks(np.arange(10, 35, 5))
+    ax_r.set_ylim((6/100, 34/100))
+    ax_r.set_yticks(np.arange(10, 35, 5)/100)
+
+    # announcement
+    dt_t = get_timeline().index[-1]
+    ax_l.axvline(x=dt_t, color="k", label="announcement")
+
     # grid off bc of two axes
-    ax_l.grid(False)
+    ax_l.grid(which="major", axis="y")
     ax_r.grid(False)
 
     # title
@@ -91,58 +114,50 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def plot_invasion_probability(prob, plot_warnings=False) -> plt.Figure:
-    """Plot prob of invasion from 01/01/2022 up to 02/24."""
+def plot_invasion_probability(prob: pd.Series) -> plt.Figure:
+    """Plot prob of invasion."""
+    timeline = get_timeline()
 
     # canvas
-    fig, ax0 = plt.subplots(figsize=(8, 4))
-    ax = (ax0, ax0.twinx())
+    fig, axs = plt.subplots(1, 2, figsize=(8, 4), sharex=False, sharey=True)
 
-    # lines
-    leg_handles = list()
-    for n_, level_ in enumerate(prob.columns):
-        prob[level_].plot(ax=ax[n_], linestyle="none", marker=".",
-                          color=palette[n_])
-        lr = {0: "left", 1: "right"}.get(n_)
-        leg_handles.append(
-            mlines.Line2D([], [], color=palette[n_],
-                          label=f"$P[S>{level_}]$ ({lr} axis)")
-        )
-        ax[n_].set_ylim(-max(prob[level_])/10, max(prob[level_]) * 10/9)
-        ax[n_].set_yticks(np.linspace(0, max(prob[level_]), 5))
-        ax[n_].tick_params(axis='y', colors=palette[n_])
-        ax[n_].yaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+    prob.plot(ax=axs[0], linestyle="none", marker="o", markersize=1)
 
-    leg_handles += [
-        mlines.Line2D([], [], color=palette[2], label="announcement"),
-    ]
+    for _dt in timeline.index[:-1]:
+        axs[0].axvline(x=_dt, color="k", linestyle="--", alpha=0.5)
 
-    timeline = get_timeline()
-    ax0.axvline(x=timeline.index[0], color=palette[2], label="announcement",
-                alpha=0.5)
+    prob.loc["2022-02-21":].plot(ax=axs[1], linestyle="none", marker="o", 
+                                 markersize=1)
 
-    if plot_warnings:
-        for dt_ in timeline.index[1:]:
-            ax0.axvline(x=dt_, color=palette[4], alpha=0.75)
-        leg_handles += [
-            mlines.Line2D([], [], color=palette[4], label="warning"),
-        ]
-
-    # labels
-    ax0.set_ylabel(r"$P[S > s]$")
-    ax0.set_xlabel("", visible=False)
+    axs[0].set_ylim(-0.025, axs[0].get_ylim()[-1] / 2)
 
     # legend
-    ax0.legend(handles=leg_handles)
+    legend_handles = [
+        Line2D([0], [0], linestyle="-", color="k"),
+        Line2D([0], [0], linestyle="--", color="k", alpha=0.5)
+    ]
+    legend_labels = [
+        "invasion", "warning"
+    ]
+    axs[1].legend(legend_handles, legend_labels, title="event")
 
-    # ticks
-    ax0.set_xticklabels(ax0.get_xticklabels(), rotation=0, ha="center")
-    ax0.xaxis.set_major_locator(mdates.DayLocator(interval=7))
-    ax0.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+    # attr common to both axes
+    for _ax in axs:
+        _ax.set_xlabel("", visible=None)
+        _ax.axvline(x=timeline.index[-1], color="k")
+        _ax.grid(which="both", axis="both")
+        _ax.xaxis.set_major_formatter(DateFormatter("%b-%d"))
 
-    if plot_warnings:
-        ax0.xaxis.set_minor_locator(mdates.DayLocator(interval=1))
-        ax0.xaxis.set_minor_formatter(mdates.DateFormatter("%d"))
+    # xticks
+    axs[0].xaxis.set_major_locator(WeekdayLocator(byweekday=MO))
+    axs[1].xaxis.set_major_locator(MonthLocator(bymonth=2, bymonthday=21))
+    axs[1].xaxis.set_minor_locator(DayLocator())
+    axs[1].xaxis.set_minor_formatter(DateFormatter("%d"))
+    fig.autofmt_xdate(rotation=0, ha="center")
+
+    # labels, titles
+    axs[0].set_ylabel("probability")
+    plt.suptitle("$P_t[S_{t+1m} > " + f"{prob.name}]$", y=0.95)
 
     fig.tight_layout()
 
@@ -168,19 +183,19 @@ def plot_mfiv(v, show_invasion=False) -> plt.Figure:
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0],
+        Line2D([], [], color=palette[0],
                       label="mfi vola")
     ]
     if show_invasion:
         leg_handles += [
-            mlines.Line2D([], [], color=palette[2], label="announcement")
+            Line2D([], [], color=palette[2], label="announcement")
         ]
     ax.legend(handles=leg_handles)
 
     # ticks
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha="center")
-    ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+    ax.xaxis.set_major_locator(DayLocator(interval=7))
+    ax.xaxis.set_major_formatter(DateFormatter("%m/%d"))
 
     fig.tight_layout()
 
@@ -207,16 +222,16 @@ def plot_invasion_probability_zoomed(prob: pd.Series) -> plt.Figure:
     ax.set_ylabel(r"$P[S > s]$")
     ax.set_xlabel("", visible=False)
 
-    ax.xaxis.set_major_locator(mdates.DayLocator([23, 24]))
-    ax.xaxis.set_minor_locator(mdates.HourLocator([0, 4, 8, 12, 16, 20]))
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
-    ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
+    ax.xaxis.set_major_locator(DayLocator([23, 24]))
+    ax.xaxis.set_minor_locator(HourLocator([0, 4, 8, 12, 16, 20]))
+    ax.xaxis.set_major_formatter(DateFormatter("%m/%d"))
+    ax.xaxis.set_minor_formatter(DateFormatter("%H:%M"))
     ax.grid(which="both", axis="both", visible=True)
 
     # legend
     leg_handles = [
-        mlines.Line2D([], [], color=palette[0], label=r"$P[S>s]$"),
-        mlines.Line2D([], [], color=palette[2], label="announcement")
+        Line2D([], [], color=palette[0], label=r"$P[S>s]$"),
+        Line2D([], [], color=palette[2], label="announcement")
     ]
     ax.legend(handles=leg_handles)
 
