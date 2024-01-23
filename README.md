@@ -5,9 +5,9 @@
 Did the FX options market expect the invasion announced on 02/24 04:06 UTC+1? 
 Assuming that option traders were thinking about a potential invasion and predicted 
 USDRUB to stabilize at a certain level one month after it happens, 
-we estimate the probability of such an invasion for two potential levels as follows:
+we estimate the probability of such an invasion for some potential levels as follows:
 
-![probability of invasion](./output/figures/prob.png "probability of invasion")
+![probability of invasion](./output/figures/prob-invasion-by-threshold.png "probability of invasion")
 
 jump to [the walkthrough notebook](./walkthrough.ipynb) for results
 
@@ -46,19 +46,13 @@ on Bloomberg on the same day. Also, we are using mid quotes here, and the
 bid-ask spreads are large.
 
 ## methodology
-To estimate the probability of the spot rate exceeding a certain threshold, I integrate the risk-neutral density of the spot rate extracted non-parametrically over a suitable domain.
-
-The well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) equates the risk-neutral density of the underlying $q(S)$ to the second derivative of the option pricing function $C(\cdot)$ w.r.t. the strike price $K$:
-$$q(S) = e^{r_f \tau} \frac{\partial^2 C(S,K,\ldots)}{\partial K^2}.$$
-With a pricing function at hand, numerical calculation of the density is straightforward. Here, I take $C$ to be the Black-Scholes pricing function at the level of SABR-derived implied volatilities along the strike dimension:
-$$C(S, K), \ldots = C^{bs}(S, \hat{\sigma}(K), K, \ldots),$$
-where $\hat{\sigma}(K)$ is the SABR volatility smile calibrated to the FX option contracts (details in the [data section](#data)).
+To estimate the probability of the spot rate exceeding a certain threshold, we integrate the risk-neutral density of the spot rate extracted non-parametrically over a suitable domain. We use the well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) to estimate the risk-neutral density of the underlying $q(S)$.
 
 ## requirements
 ### data
 
 i provide the events with timestamps in `data/timeline.csv`, but it is your responsibility to fetch the price data and put it into 
-a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in `src/datafeed/downstream.py`. 
+a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in the [data processing notebook](notebooks/1-process-data.ipynb). 
 
 ### environment
 clone the repo somewhere and `cd` into the directory;
@@ -84,6 +78,7 @@ if using [docker](https://www.docker.com/), all environment variables and depend
 #### no docker
 if no docker, you will have to create the environment yourself either with poetry:
 ```bash
+poetry install
 poetry shell
 ```
 
