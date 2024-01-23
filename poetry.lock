@@ -1603,7 +1603,7 @@ et-xmlfile = "*"
 
 [[package]]
 name = "optools"
-version = "0.1.1"
+version = "0.1.2"
 description = "FX option pricing toolbox, based on 'Foreign Exchange Option Pricing: A Practitioner's Guide' by Clark."
 optional = false
 python-versions = "^3.10"
@@ -1621,7 +1621,7 @@ statsmodels = "^0.14.0"
 type = "git"
 url = "https://github.com/ipozdeev/optools"
 reference = "HEAD"
-resolved_reference = "22b469ae6c437285cd7db51e1fc12334fc6a5506"
+resolved_reference = "b5b7655e11ff097ae4213c80f1c28a09da0793dc"
 
 [[package]]
 name = "overrides"
