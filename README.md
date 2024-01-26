@@ -2,18 +2,19 @@
 
 (with Akos Török)
 
-Did the FX options market expect the invasion announced on 02/24 04:06 UTC+1? 
-Assuming that option traders were thinking about a potential invasion and predicted 
-USDRUB to stabilize at a certain level one month after it happens, 
-we estimate the probability of such an invasion for some potential levels as follows:
+* [introduction](#introduction)
+* [assumptions](#assumptions)
+* [replication](#replication)
+
+## introduction
+
+Did the FX options market expect the invasion announced on february 24 at 04:06 UTC+1? Assuming that option traders were thinking about a potential invasion and predicted USDRUB to stabilize at a certain level after it happens, we estimate the probability of such an invasion for some potential levels as follows:
 
 ![probability of invasion](./output/figures/prob-invasion-by-threshold.png "probability of invasion")
 
-jump to [the walkthrough notebook](./walkthrough.ipynb) for results
+To come to this conclusion, we equate the probability of invasion to that of the spot rate exceeding a certain high threshold when options expire. The latter probability is calculated by integrating the risk-neutral density of the spot rate at options' expiration (derived using the well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents)) from the threshold to a very large value.
 
-* [assumptions](#assumptions)
-* [methodology](#methodology)
-* [requirements](#requirements)
+Jump to [the walkthrough notebook](./walkthrough.ipynb) for more detailed calculations.
 
 ## assumptions
 In the immediate run-up to the invasion (a week or so):
@@ -23,39 +24,21 @@ In the immediate run-up to the invasion (a week or so):
 1. the risk-neutral distribution did not have tails that could not be approximated by those of a spherical distribution;
 1. markets were sufficiently liquid, and Bloomberg quotes are representative.
 
-Assumptions 1-2 are alright: the time span of a week is short and the 
-conflict was arguably the major driver of related asset prices. 
+Assumptions 1-2 are alright: the time span of a week is short and the conflict was arguably the major driver of related asset prices. 
 
-Assumption 3 is strong, as the risk-neutral probabilities are of course 
-different from the physical ones: had the market participants been asked 
-directly about the probability of war, the answer would be different from what 
-the asset prices tell, just as the insurance premium-based probability of a 
-hurricane is different from the physical probability (in short, difference 
-stems from the fact that people undervalue assets that pay off poorly in the 
-states of high marginal utility). However, I would imagine that the RUB 
-investors' marginal utility negatively correlates with the the USDRUB spot 
-returns and that the risk-neutral probability arguably overestimates the 
-physical one.
+Assumption 3 is strong, as the risk-neutral probabilities are of course different from the physical ones, just as the insurance premium-based probability of a hurricane is different from the physical probability. However, we would imagine that the RUB investors' marginal utility negatively correlates with the the USDRUB spot returns, and that the risk-neutral probability overestimates the physical one.
 
-Assumption 4 is prohibitively strong and compromises the very idea of 
-estimating the probability of a tail risk event.
+Assumption 4 is prohibitively strong and compromises the very idea of estimating the probability of a tail risk event.
 
-Assumption 5 is strong enough: we once asked JP Morgan for option quotes they 
-supply to their customers, and those were way different than the once observed 
-on Bloomberg on the same day. Also, we are using mid quotes here, and the 
-bid-ask spreads are large.
+Assumption 5 is strong enough: we once asked JP Morgan for option quotes they supply to their customers, and those were way different than the once observed on Bloomberg on the same day. Also, we are using mid quotes here, and the bid-ask spreads are large.
 
-## methodology
-To estimate the probability of the spot rate exceeding a certain threshold, we integrate the risk-neutral density of the spot rate extracted non-parametrically over a suitable domain. We use the well-known result from [Breeden and Litzenberger (1978)](https://www.jstor.org/stable/2352653?seq=1#metadata_info_tab_contents) to estimate the risk-neutral density of the underlying $q(S)$.
-
-## requirements
+## replication
 ### data
 
-i provide the events with timestamps in `data/timeline.csv`, but it is your responsibility to fetch the price data and put it into 
-a feather file called `usdrub-data-raw.ftr` in folder `data/` as described in the [data processing notebook](notebooks/1-process-data.ipynb). 
+We provide the events with timestamps in `data/timeline.csv`, but it is your responsibility to fetch the price data and put it into a feather file called `usdrub-data-hf.ftr` in folder `data/` as described in the 'raw data' section of the [data processing notebook](notebooks/1-process-data.ipynb). Notebook [methodology](notebooks/2-methodology.ipynb) can be run without the need to supply this data.
 
 ### environment
-clone the repo somewhere and `cd` into the directory;
+Clone the repo somewhere and `cd` into the directory;
 
 ```bash
 git clone https://github.com/ipozdeev/fx-options-ukraine-war
@@ -64,25 +47,32 @@ cd fx-options-ukraine-war
 
 #### docker
 
-if using [docker](https://www.docker.com/), all environment variables and dependencies are taken care of;
+if using [docker](https://www.docker.com/), all environment variables and dependencies are taken care of:
 * build the image:
   ```bash
   docker build --tag fouw .
   ```
-* run the container to get access jupyter and be able to run `walkthrough.ipynb`:
+* run the container to get access jupyter and be able to run the notebooks:
   ```bash
-  docker run -p 8888:8888 -v $(pwd):/home/jovyan/work -e JUPYTER_TOKEN='' fouw
+  docker run \
+    -p 8888:8888 \
+    --user root \
+    -e CHOWN_EXTRA="/home/jovyan/work" \
+    -e CHOWN_EXTRA_OPTS="-R" \
+    -v $(pwd):/home/jovyan/work \
+    -e JUPYTER_TOKEN='' \
+    fouw
   ```
 * follow the link as usual.
 
 #### no docker
-if no docker, you will have to create the environment yourself either with poetry:
+if no docker, you will have to create the environment yourself either with [poetry](https://python-poetry.org/):
 ```bash
-poetry install
+cd path/to/fx-options-ukraine-war
 poetry shell
 ```
 
-(make sure `which python` points to the poetry environment) or with `venv` from `requirements.txt`: 
+or with `venv` from `requirements.txt`: 
 
 ```bash
 python3 -m venv .venv
@@ -90,6 +80,10 @@ source .venv/bin/activate;
 pip install -r requirements.txt
 ```
 
-Then, `jupyter lab` will take you to the correct place.
+and run
+
+```bash
+jupyter lab
+```
 
 Have fun!
