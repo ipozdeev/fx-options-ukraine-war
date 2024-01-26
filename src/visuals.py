@@ -8,16 +8,14 @@ from matplotlib.dates import DayLocator, DateFormatter, \
     WeekdayLocator, MO, MonthLocator, HourLocator
 from matplotlib.ticker import FormatStrFormatter, MultipleLocator
 
-from .datafeed import get_timeline
-
 mpl.style.use("seaborn-v0_8-colorblind")
 palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
-def plot_spot(spot: pd.Series) -> plt.Figure:
+def plot_spot(spot: pd.Series, timeline: pd.Series) -> plt.Figure:
     """Plot spot exchange rate."""
     to_plot = spot.rename("usdrub")
-    dt_t = get_timeline().index[-1]
+    dt_t = timeline.index[-1]
 
     # canvas
     fig, ax = plt.subplots(1, 2, sharey=True, sharex=False, figsize=(8, 4))
@@ -61,7 +59,7 @@ def plot_spot(spot: pd.Series) -> plt.Figure:
     return fig
 
 
-def plot_rates(rates: pd.DataFrame) -> plt.Figure:
+def plot_rates(rates: pd.DataFrame, timeline: pd.Series) -> plt.Figure:
     """Plot interest rates.
 
     Parameters
@@ -96,7 +94,7 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     ax_r.set_yticks(np.arange(10, 35, 5)/100)
 
     # announcement
-    dt_t = get_timeline().index[-1]
+    dt_t = timeline.index[-1]
     ax_l.axvline(x=dt_t, color="k", label="announcement")
 
     # grid off bc of two axes
@@ -114,10 +112,8 @@ def plot_rates(rates: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-def plot_invasion_probability(prob: pd.Series) -> plt.Figure:
+def plot_invasion_probability(prob: pd.Series, timeline) -> plt.Figure:
     """Plot prob of invasion."""
-    timeline = get_timeline()
-
     # canvas
     fig, axs = plt.subplots(1, 2, figsize=(8, 4), sharex=False, sharey=True)
 
@@ -158,82 +154,6 @@ def plot_invasion_probability(prob: pd.Series) -> plt.Figure:
     # labels, titles
     axs[0].set_ylabel("probability")
     plt.suptitle("$P_t[S_{t+1m} > " + f"{prob.name}]$", y=0.95)
-
-    fig.tight_layout()
-
-    return fig
-
-
-def plot_mfiv(v, show_invasion=False) -> plt.Figure:
-    """Plot prob of invasion from 01/01/2022 up to 02/24."""
-
-    # canvas
-    fig, ax = plt.subplots(figsize=(8, 4))
-
-    # lines
-    v.plot(ax=ax, linestyle="none", marker=".", color=palette[0])
-
-    if show_invasion:
-        dt_t = get_timeline().index[-1]
-        ax.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
-
-    # labels
-    ax.set_ylabel(r"$\sqrt{mfiv}$")
-    ax.set_xlabel("", visible=False)
-
-    # legend
-    leg_handles = [
-        Line2D([], [], color=palette[0],
-                      label="mfi vola")
-    ]
-    if show_invasion:
-        leg_handles += [
-            Line2D([], [], color=palette[2], label="announcement")
-        ]
-    ax.legend(handles=leg_handles)
-
-    # ticks
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha="center")
-    ax.xaxis.set_major_locator(DayLocator(interval=7))
-    ax.xaxis.set_major_formatter(DateFormatter("%m/%d"))
-
-    fig.tight_layout()
-
-    return fig
-
-
-def plot_invasion_probability_zoomed(prob: pd.Series) -> plt.Figure:
-    """Zoom in on Fe 23-24th."""
-    dt_t = get_timeline().index[-1]
-
-    # canvas
-    fig, ax = plt.subplots(figsize=(8, 4))
-
-    # lines
-    prob.loc["2022-02-23":].loc[:dt_t]\
-        .plot(ax=ax, linestyle="none", marker=".")
-    ax.axvline(x=dt_t, color=palette[2], label="announcement", alpha=0.5)
-
-    # ticks
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=0, ha="center")
-    # ax.set_yticks(np.arange(0.2, 0.4, 0.05))
-
-    # labels
-    ax.set_ylabel(r"$P[S > s]$")
-    ax.set_xlabel("", visible=False)
-
-    ax.xaxis.set_major_locator(DayLocator([23, 24]))
-    ax.xaxis.set_minor_locator(HourLocator([0, 4, 8, 12, 16, 20]))
-    ax.xaxis.set_major_formatter(DateFormatter("%m/%d"))
-    ax.xaxis.set_minor_formatter(DateFormatter("%H:%M"))
-    ax.grid(which="both", axis="both", visible=True)
-
-    # legend
-    leg_handles = [
-        Line2D([], [], color=palette[0], label=r"$P[S>s]$"),
-        Line2D([], [], color=palette[2], label="announcement")
-    ]
-    ax.legend(handles=leg_handles)
 
     fig.tight_layout()
 
